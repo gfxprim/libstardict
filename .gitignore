@@ -1,2 +1,7 @@
 *.o
 sd-cmd
+libstardict.a
+libstardict.so
+libstardict.so.1
+libstardict.so.1.0.0
+include.mk

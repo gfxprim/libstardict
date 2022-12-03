@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# Dummy configure to extract parameters and pass the to make
+#
+
+echo -n > include.mk
+
+
+while true; do
+  case "$1" in
+  --prefix=*) echo "PREFIX=$(echo $1|cut -d= -f2)" >> include.mk; shift;;
+  --libdir=*) echo "LIBDIR=$(echo $1|cut -d= -f2)" >> include.mk; shift;;
+  --mandir=*) echo "MANDIR=$(echo $1|cut -d= -f2)" >> include.mk; shift;;
+  --sysconfdir=*) echo "SYSCONFDIR=$(echo $1|cut -d= -f2)" >> include.mk; shift;;
+  --*) shift;;
+  *) break;
+  esac
+done
