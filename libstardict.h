@@ -17,6 +17,10 @@ enum sd_entry_fmt {
 	SD_ENTRY_UTF8_TEXT = 'm',
 	/* Pango html-like markup UTF8 */
 	SD_ENTRY_PANGO_MARKUP = 'g',
+	/* HTML markup */
+	SD_ENTRY_HTML = 'h',
+	/* Chinese YinBiao or Japanese Kana utf8 string */
+	SD_ENTRY_CHINESE_JAPANESE = 'y',
 };
 
 struct sd_dict {
