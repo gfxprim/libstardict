@@ -1,42 +1,60 @@
--include include.mk
+# SPDX-License-Identifier: LGPL-2.1-or-later
+-include config.mk
 CFLAGS?=-W -Wall -O2
 PREFIX?=/usr/local/
 LIBDIR?=$(PREFIX)/lib
+BINDIR?=$(PREFIX)/bin
 INCLUDEDIR?=$(PREFIX)/include
 
-LDLIBS=-lz
+include proj.mk
 
-LIB=libstardict
-SLIB_NAME=$(LIB).a
-LIB_NAME=$(LIB).so
+LIB_OBJS=$(subst .c,.o,$(LIB_SRCS))
+LIB_DEPS=$(subst .c,.dep,$(LIB_SRCS))
+LIB_SNAME=lib$(LIB).a
+LIB_NAME=lib$(LIB).so
 LIB_SONAME=$(LIB_NAME).1
 LIB_FILE=$(LIB_SONAME).0.0
-LIB_OBJS=libstardict.o
 
-libstardict.o: CFLAGS=-fPIC
+BIN_OBJS=$(subst .c,.o,$(BIN_SRCS))
+BIN_DEPS=$(subst .c,.dep,$(BIN_SRCS))
+
+all: $(BIN) $(LIB_FILE) $(LIB_SONAME) $(LIB_NAME) $(LIB_SNAME)
+
+$(LIB_OBJS): CFLAGS+=-fPIC
+$(LIB_FILE): LDLIBS+=$(LIB_LDLIBS)
+
+#ifdef BIN
+$(BIN): $(BIN_OBJS)
+$(BIN): LDLIBS+=-l$(LIB)
+$(BIN): LDFLAGS+=-L.
+$(BIN): |$(LIB_NAME) $(LIB_SONAME)
+#endif
 
 LIB_FILES=$(LIB_FILE) $(SLIB_NAME) $(LIB_NAME) $(LIB_SONAME)
 
-all: sd-cmd $(LIB_FILES)
-
-sd-cmd: sd-cmd.o libstardict.o
+-include $(LIB_DEPS)
+-include $(BIN_DEPS)
 
 $(LIB_FILE): $(LIB_OBJS)
-	 $(CC) -fPIC --shared -Wl,-soname -Wl,$(LIB_SONAME) $^ $(LDLIBS) -o $@
+	 $(CC) -fPIC --shared -Wl,-soname -Wl,$(LIB_SONAME) $^ $(LIB_LDLIBS) -o $@
 
 $(LIB_SONAME): $(LIB_FILE)
-	ln -s $(LIB_FILE) $(LIB_SONAME)
+	[ -f $(LIB_SONAME) ] || ln -s $(LIB_FILE) $(LIB_SONAME)
 
 $(LIB_NAME): $(LIB_FILE)
-	ln -s $(LIB_FILE) $(LIB_NAME)
+	[ -f $(LIB_NAME) ] || ln -s $(LIB_FILE) $(LIB_NAME)
 
-$(SLIB_NAME): $(LIB_OBJS)
+$(LIB_SNAME): $(LIB_OBJS)
 	$(AR) rcs $@ $^
+
+$(BIN_DEPS) $(LIB_DEPS): %.dep: %.c
+	$(CC) -MM $(CFLAGS) $< -o $@
 
 install:
 	install -D $(LIB_FILE) -t $(DESTDIR)/$(LIBDIR)
 	cp -d $(LIB_NAME) $(LIB_SONAME) $(DESTDIR)/$(LIBDIR)
-	install -D libstardict.h -t $(DESTDIR)/$(INCLUDEDIR)
+	install -D $(LIB_HEADERS) -t $(DESTDIR)/$(INCLUDEDIR)
+	[ -z "$(BIN)" ] || install -D $(BIN) -t $(DESTDIR)/$(BINDIR)
 
 clean:
-	rm -f *.o sd-cmd $(LIB_NAME) $(LIB_SONAME) $(LIB_FILE)
+	rm -f $(LIB_NAME) $(LIB_SONAME) $(LIB_FILE) $(LIB_SNAME) $(LIB_OBJS) $(BIN) $(BIN_OBJS) $(LIB_DEPS) $(BIN_DEPS) config.mk
