@@ -274,7 +274,7 @@ static struct dict_dz *parse_dict_dz(const char *dict_path)
 
 	if (chunk_cnt > (HEADER_MAP_SIZE-22) / 2) {
 		sd_err("Too many chunks in dict.dz");
-		goto err1;
+		goto err0;
 	}
 
 	struct dict_dz *res = malloc(sizeof(struct dict_dz) + sizeof(struct chunk_pos) * chunk_cnt);
