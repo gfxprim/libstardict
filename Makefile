@@ -51,7 +51,7 @@ $(BIN_DEPS) $(LIB_DEPS): %.dep: %.c
 	$(CC) -MM $(CFLAGS) $< -o $@
 
 install:
-	install -D $(LIB_FILE) -t $(DESTDIR)/$(LIBDIR)
+	install -D $(LIB_FILE) $(LIB_SNAME) -t $(DESTDIR)/$(LIBDIR)
 	cp -d $(LIB_NAME) $(LIB_SONAME) $(DESTDIR)/$(LIBDIR)
 	install -D $(LIB_HEADERS) -t $(DESTDIR)/$(INCLUDEDIR)
 	[ -z "$(BIN)" ] || install -D $(BIN) -t $(DESTDIR)/$(BINDIR)
