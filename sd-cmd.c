@@ -21,8 +21,10 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	printf("Found %u dictionaries\n", paths.dict_cnt);
+
 	for (path = paths.paths; path; path = path->next)
-		printf("Found dict %s\n", path->name);
+		printf(" dict '%s'\n", path->name);
 	printf("\n");
 
 	printf("Opening dict '%s'\n", paths.paths->name);

@@ -627,7 +627,7 @@ void sd_close_dict(struct sd_dict *dict)
 #define SD_DICT_DIR "/usr/share/stardict/dic"
 #define SD_DICT_USER_DIR ".stardict/dic"
 
-static struct sd_dict_path *dir_lookup(const char *dir_path)
+static struct sd_dict_path *dir_lookup(const char *dir_path, unsigned int *cnt)
 {
 	struct dirent *entry;
 	DIR *dir = opendir(dir_path);
@@ -655,6 +655,8 @@ static struct sd_dict_path *dir_lookup(const char *dir_path)
 
 			path->next = ret;
 			ret = path;
+
+			(*cnt)++;
 		}
 	}
 
@@ -668,11 +670,13 @@ void sd_dict_paths_lookup(struct sd_dict_paths *paths)
 	struct sd_dict_path *tmp, *i;
 	char *home = getenv("HOME");
 
+	paths->dict_cnt = 0;
+
 	if (home) {
 		paths->home_sd_dir = sd_aprintf("%s/%s", home, SD_DICT_USER_DIR);
 
 		if (paths->home_sd_dir)
-			paths->paths = dir_lookup(paths->home_sd_dir);
+			paths->paths = dir_lookup(paths->home_sd_dir, &paths->dict_cnt);
 
 		if (!paths->paths) {
 			free(paths->home_sd_dir);
@@ -680,7 +684,7 @@ void sd_dict_paths_lookup(struct sd_dict_paths *paths)
 		}
 	}
 
-	tmp = dir_lookup(SD_DICT_DIR);
+	tmp = dir_lookup(SD_DICT_DIR, &paths->dict_cnt);
 	if (!tmp)
 		return;
 
