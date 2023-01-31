@@ -627,14 +627,14 @@ void sd_close_dict(struct sd_dict *dict)
 #define SD_DICT_DIR "/usr/share/stardict/dic"
 #define SD_DICT_USER_DIR ".stardict/dic"
 
-static struct sd_dict_path *dir_lookup(const char *dir_path, unsigned int *cnt)
+static void dir_lookup(const char *dir_path, unsigned int *cnt,
+                       struct sd_dict_path *dest[])
 {
 	struct dirent *entry;
 	DIR *dir = opendir(dir_path);
-	struct sd_dict_path *ret = NULL;
 
 	if (!dir)
-		return NULL;
+		return;
 
 	while ((entry = readdir(dir))) {
 		size_t len = strlen(entry->d_name);
@@ -643,71 +643,71 @@ static struct sd_dict_path *dir_lookup(const char *dir_path, unsigned int *cnt)
 			continue;
 
 		if (!strcmp(entry->d_name + len - 4, ".ifo")) {
-			struct sd_dict_path *path = malloc(sizeof(struct sd_dict_path) + len - 3);
+			if (dest) {
+				struct sd_dict_path *path = malloc(sizeof(struct sd_dict_path) + len - 3);
 
-			if (!path)
-				continue;
+				if (!path)
+					continue;
 
-			memcpy(path->name, entry->d_name, len - 4);
-			path->name[len - 4] = 0;
+				memcpy(path->name, entry->d_name, len - 4);
+				path->name[len - 4] = 0;
 
-			path->dir = dir_path;
+				path->dir = dir_path;
 
-			path->next = ret;
-			ret = path;
+				dest[*cnt] = path;
+			}
 
 			(*cnt)++;
 		}
 	}
 
 	closedir(dir);
-
-	return ret;
 }
 
-void sd_dict_paths_lookup(struct sd_dict_paths *paths)
+void sd_lookup_dict_paths(struct sd_dict_paths *paths)
 {
-	struct sd_dict_path *tmp, *i;
 	char *home = getenv("HOME");
 
 	paths->dict_cnt = 0;
+	paths->home_sd_dir = sd_aprintf("%s/%s", home, SD_DICT_USER_DIR);
+	paths->paths = NULL;
 
-	if (home) {
-		paths->home_sd_dir = sd_aprintf("%s/%s", home, SD_DICT_USER_DIR);
+	if (paths->home_sd_dir)
+		dir_lookup(paths->home_sd_dir, &paths->dict_cnt, NULL);
 
-		if (paths->home_sd_dir)
-			paths->paths = dir_lookup(paths->home_sd_dir, &paths->dict_cnt);
+	dir_lookup(SD_DICT_DIR, &paths->dict_cnt, NULL);
 
-		if (!paths->paths) {
+	if (!paths->dict_cnt)
+		return;
+
+	paths->paths = malloc(sizeof(struct sd_dict_path*) * paths->dict_cnt);
+
+	paths->dict_cnt = 0;
+
+	if (!paths->paths) {
+		free(paths->home_sd_dir);
+		return;
+	}
+
+	if (paths->home_sd_dir) {
+		dir_lookup(paths->home_sd_dir, &paths->dict_cnt, paths->paths);
+		if (!paths->dict_cnt) {
 			free(paths->home_sd_dir);
 			paths->home_sd_dir = NULL;
 		}
 	}
 
-	tmp = dir_lookup(SD_DICT_DIR, &paths->dict_cnt);
-	if (!tmp)
-		return;
-
-	if (paths->paths) {
-		for (i = paths->paths; i->next; i = i->next);
-
-		i->next = tmp;
-	} else {
-		paths->paths = tmp;
-	}
+	dir_lookup(SD_DICT_DIR, &paths->dict_cnt, paths->paths);
 }
 
-void sd_dict_paths_free(struct sd_dict_paths *paths)
+void sd_free_dict_paths(struct sd_dict_paths *paths)
 {
-	struct sd_dict_path *i, *j;
+	unsigned int i;
 
 	free(paths->home_sd_dir);
 
-	i = paths->paths;
+	for (i = 0; i < paths->dict_cnt; i++)
+		free(paths->paths[i]);
 
-	while (i) {
-		j = i;
-		i = i->next;
-		free(j);
-	}
+	free(paths->paths);
 }

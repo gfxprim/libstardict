@@ -129,7 +129,7 @@ struct sd_dict_path {
 struct sd_dict_paths {
 	unsigned int dict_cnt;
 	char *home_sd_dir;
-	struct sd_dict_path *paths;
+	struct sd_dict_path **paths;
 };
 
 /**
@@ -137,13 +137,13 @@ struct sd_dict_paths {
  *
  * @paths A strucutre to fill the scanned directories into.
  */
-void sd_dict_paths_lookup(struct sd_dict_paths *paths);
+void sd_lookup_dict_paths(struct sd_dict_paths *paths);
 
 /**
  * @brief Frees stardict dictionary paths.
  *
  * @paths A structure previously filled by the lookup.
  */
-void sd_dict_paths_free(struct sd_dict_paths *paths);
+void sd_free_dict_paths(struct sd_dict_paths *paths);
 
 #endif /* LIBSTARDICT_H__ */

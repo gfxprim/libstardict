@@ -12,10 +12,10 @@
 int main(int argc, char *argv[])
 {
 	struct sd_dict_paths paths;
-	struct sd_dict_path *path;
 	struct sd_dict *dict;
+	unsigned int i;
 
-	sd_dict_paths_lookup(&paths);
+	sd_lookup_dict_paths(&paths);
 	if (!paths.paths) {
 		printf("No dictionaries found\n");
 		return 1;
@@ -23,19 +23,19 @@ int main(int argc, char *argv[])
 
 	printf("Found %u dictionaries\n", paths.dict_cnt);
 
-	for (path = paths.paths; path; path = path->next)
-		printf(" dict '%s'\n", path->name);
+	for (i = 0; i < paths.dict_cnt; i++)
+		printf(" dict '%s'\n", paths.paths[i]->name);
 	printf("\n");
 
-	printf("Opening dict '%s'\n", paths.paths->name);
+	printf("Opening dict '%s'\n", paths.paths[0]->name);
 
-	dict = sd_open_dict(paths.paths->dir, paths.paths->name);
+	dict = sd_open_dict(paths.paths[0]->dir, paths.paths[0]->name);
 	if (!dict) {
 		printf("Failed to load dict!\n");
 		return 1;
 	}
 
-	sd_dict_paths_free(&paths);
+	sd_free_dict_paths(&paths);
 
 	printf("Dict loaded word count=%u\n", dict->word_count);
 
