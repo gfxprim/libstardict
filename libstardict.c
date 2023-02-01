@@ -618,6 +618,9 @@ void sd_free_entry(struct sd_entry *entry)
 
 void sd_close_dict(struct sd_dict *dict)
 {
+	if (!dict)
+		return;
+
 	destroy_dict_dz(dict->dict_dz);
 	free(dict->word_list);
 	free(dict->idx);
