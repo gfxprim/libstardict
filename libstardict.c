@@ -5,6 +5,7 @@
 
  */
 
+#define _GNU_SOURCE
 #include <stddef.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -65,8 +66,6 @@ static void sd_err(const char *fmt, ...)
 
 #define DICT_DZ_MAGIC1 'R'
 #define DICT_DZ_MAGIC2 'A'
-
-#define HEADER_MAP_SIZE 4096
 
 struct chunk_pos {
 	uint16_t size;
@@ -194,6 +193,11 @@ static void dict_dz_chunk_cache_init(struct dict_dz *self)
 		self->chunk_cache[i].data = NULL;
 }
 
+#define GZIP_HEADER_SIZE 10
+#define EXTRA_HEADER_SIZE 12
+#define HEADER_SIZE (GZIP_HEADER_SIZE + EXTRA_HEADER_SIZE)
+#define MAX_COMMENTS 1024
+
 /**
  * The file stars with gzip header that is:
  *
@@ -229,6 +233,7 @@ static void dict_dz_chunk_cache_init(struct dict_dz *self)
 static struct dict_dz *parse_dict_dz(const char *dict_path)
 {
 	int fd;
+	off_t header_map_size = getpagesize();
 
 	fd = open(dict_path, O_RDONLY);
 	if (!fd) {
@@ -236,7 +241,7 @@ static struct dict_dz *parse_dict_dz(const char *dict_path)
 		return NULL;
 	}
 
-	uint8_t *header = mmap(NULL, HEADER_MAP_SIZE, PROT_READ, MAP_PRIVATE, fd, 0);
+	uint8_t *header = mmap(NULL, header_map_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (header == MAP_FAILED) {
 		sd_err("Failed to map dict.dz file");
 		goto err0;
@@ -244,26 +249,26 @@ static struct dict_dz *parse_dict_dz(const char *dict_path)
 
 	if (header[0] != GZ_MAGIC1 || header[1] != GZ_MAGIC2) {
 		sd_err("File dict.dz has wrong gzip magic");
-		goto err0;
+		goto err1;
 	}
 
 	if (header[2] != GZ_METHOD_DEFLATE) {
 		sd_err("File dict.dz unsupported compression method");
-		goto err0;
+		goto err1;
 	}
 
 	uint8_t flags = header[3];
 
 	if (!(flags & GZ_FLAGS_EXTRA_FIELD)) {
 		sd_err("File dict.dz does not have extra field");
-		goto err0;
+		goto err1;
 	}
 
 	uint16_t extra_field_len = header[10] | header[11]<<8;
 
 	if (header[12] != DICT_DZ_MAGIC1 || header[13] != DICT_DZ_MAGIC2) {
 		sd_err("File dict.dz has wrong dz magic");
-		goto err0;
+		goto err1;
 	}
 
 	uint16_t version = header[16] | header[17] << 8;
@@ -273,9 +278,16 @@ static struct dict_dz *parse_dict_dz(const char *dict_path)
 	if (version != 1)
 		sd_err("Invalid version");
 
-	if (chunk_cnt > (HEADER_MAP_SIZE-22) / 2) {
-		sd_err("Too many chunks in dict.dz");
-		goto err0;
+	if (chunk_cnt > (header_map_size-HEADER_SIZE-MAX_COMMENTS) / 2) {
+		size_t new_map_size = (size_t)chunk_cnt * 2 + HEADER_SIZE + MAX_COMMENTS;
+
+		header = mremap(header, header_map_size, new_map_size, MREMAP_MAYMOVE);
+		if (!header) {
+			sd_err("Failed to remap dict.dz file");
+			goto err1;
+		}
+
+		header_map_size = new_map_size;
 	}
 
 	struct dict_dz *res = malloc(sizeof(struct dict_dz) + sizeof(struct chunk_pos) * chunk_cnt);
@@ -290,16 +302,16 @@ static struct dict_dz *parse_dict_dz(const char *dict_path)
 
 	dict_dz_chunk_cache_init(res);
 
-	off_t offset = 10 + extra_field_len + 2;
+	off_t offset = GZIP_HEADER_SIZE + extra_field_len + 2;
 
 	if (flags & GZ_FLAGS_FNAME) {
-		while (offset < HEADER_MAP_SIZE && header[offset])
+		while (offset < header_map_size && header[offset])
 			offset++;
 		offset++;
 	}
 
 	if (flags & GZ_FLAGS_COMMENT) {
-		while (offset < HEADER_MAP_SIZE && header[offset])
+		while (offset < header_map_size && header[offset])
 			offset++;
 		offset++;
 	}
@@ -307,26 +319,27 @@ static struct dict_dz *parse_dict_dz(const char *dict_path)
 	if (flags & GZ_FLAGS_CRC)
 		offset+=2;
 
-	if (offset >= HEADER_MAP_SIZE) {
-		sd_err("File dict.dz eader too long");
-		goto err1;
+	if (offset >= header_map_size) {
+	       sd_err("File dict.dz header comments too long");
+               goto err2;
 	}
 
 	uint16_t i;
 
 	for (i = 0; i < chunk_cnt; i++) {
-		res->chunks[i].size = header[22 + 2*i] | header[23 + 2*i] << 8;
+		res->chunks[i].size = header[HEADER_SIZE + 2*i] | header[HEADER_SIZE + 1 + 2*i] << 8;
 		res->chunks[i].offset = offset;
 		offset += res->chunks[i].size;
 	}
 
-	munmap(header, HEADER_MAP_SIZE);
+	munmap(header, header_map_size);
 
 	return res;
-err1:
+err2:
 	free(res);
+err1:
+	munmap(header, header_map_size);
 err0:
-	munmap(header, HEADER_MAP_SIZE);
 	close(fd);
 	return NULL;
 }
