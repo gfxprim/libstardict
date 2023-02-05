@@ -445,6 +445,7 @@ static int parse_ifo(const char *path, const char *name, struct sd_dict *dict)
 		sscanf(line, "wordcount=%u\n", &dict->word_count);
 		sscanf(line, "idxfilesize=%u\n", &dict->idx_filesize);
 		sscanf(line, "sametypesequence=%c\n", &dict->entry_fmt);
+		sscanf(line, "bookname=%63[^\n]s\n", dict->book_name);
 	}
 
 	if (!dict->word_count) {
@@ -459,6 +460,11 @@ static int parse_ifo(const char *path, const char *name, struct sd_dict *dict)
 
 	if (!dict->entry_fmt) {
 		sd_err("Unsupported file wihout sametypesequence");
+		goto err1;
+	}
+
+	if (!dict->book_name[0]) {
+		sd_err("Missing bookname in ifo file");
 		goto err1;
 	}
 

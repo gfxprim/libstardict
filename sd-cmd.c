@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	printf("Dict name '%s'\n", dict->book_name);
+
 	sd_free_dict_paths(&paths);
 
 	printf("Dict loaded word count=%u\n", dict->word_count);

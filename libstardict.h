@@ -23,6 +23,8 @@ enum sd_entry_fmt {
 	SD_ENTRY_CHINESE_JAPANESE = 'y',
 };
 
+#define SD_DICT_BOOKNAME_MAX 64
+
 struct sd_dict {
 	/* set if sametypesequence= is set in the ifo file */
 	char entry_fmt;
@@ -30,6 +32,9 @@ struct sd_dict {
 	unsigned int word_count;
 	/* (uncompressed) index file size */
 	unsigned int idx_filesize;
+
+	/* book name */
+	char book_name[SD_DICT_BOOKNAME_MAX];
 
 	/*
 	 * Pointer to compressed dictionary, set if dictionary is compressed.
