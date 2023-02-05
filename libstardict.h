@@ -130,7 +130,8 @@ void sd_free_entry(struct sd_entry *entry);
 struct sd_dict_path {
 	struct sd_dict_path *next;
 	const char *dir;
-	char name[];
+	char book_name[SD_DICT_BOOKNAME_MAX];
+	char fname[];
 };
 
 struct sd_dict_paths {

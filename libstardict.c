@@ -417,9 +417,9 @@ static void destroy_dict_dz(struct dict_dz *self)
 	free(self);
 }
 
-static int parse_ifo(const char *path, const char *name, struct sd_dict *dict)
+static int parse_ifo(const char *path, const char *fname, struct sd_dict *dict)
 {
-	char *ifo_path = sd_aprintf("%s/%s.ifo", path, name);
+	char *ifo_path = sd_aprintf("%s/%s.ifo", path, fname);
 	FILE *ifo;
 	char line[256];
 	int ret = 1;
@@ -649,6 +649,40 @@ void sd_close_dict(struct sd_dict *dict)
 #define SD_DICT_DIR "/usr/share/stardict/dic"
 #define SD_DICT_USER_DIR ".stardict/dic"
 
+static int parse_bookname(const char *path, const char *fname, char *book_name)
+{
+	char *ifo_path = sd_aprintf("%s/%s", path, fname);
+	FILE *ifo;
+	char line[128];
+	int ret = 0;
+
+	if (!ifo_path) {
+		ret = 1;
+		goto err0;
+	}
+
+	ifo = fopen(ifo_path, "r");
+	if (!ifo) {
+		sd_err("Failed to open '%s': %s", ifo_path, strerror(errno));
+		ret = 1;
+		goto err1;
+	}
+
+	while (fgets(line, sizeof(line), ifo))
+		sscanf(line, "bookname=%63[^\n]s\n", book_name);
+
+	ret = book_name[0] == 0;
+
+	if (ret)
+		sd_err("Invalid ifo file '%s'", fname);
+
+	fclose(ifo);
+err1:
+	free(ifo_path);
+err0:
+	return ret;
+}
+
 static void dir_lookup(const char *dir_path, unsigned int *cnt,
                        struct sd_dict_path *dest[])
 {
@@ -671,8 +705,15 @@ static void dir_lookup(const char *dir_path, unsigned int *cnt,
 				if (!path)
 					continue;
 
-				memcpy(path->name, entry->d_name, len - 4);
-				path->name[len - 4] = 0;
+				memset(path, 0, sizeof(*path));
+
+				if (parse_bookname(dir_path, entry->d_name, path->book_name)) {
+					free(path);
+					continue;
+				}
+
+				memcpy(path->fname, entry->d_name, len - 4);
+				path->fname[len - 4] = 0;
 
 				path->dir = dir_path;
 

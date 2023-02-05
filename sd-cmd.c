@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	printf("Found %u dictionaries\n", paths.dict_cnt);
 
 	for (i = 0; i < paths.dict_cnt; i++)
-		printf(" %2i '%s'\n", i, paths.paths[i]->name);
+		printf(" %2i '%s' - %s.ifo\n", i, paths.paths[i]->book_name, paths.paths[i]->fname);
 	printf("\n");
 
 	if (d_idx >= paths.dict_cnt) {
@@ -44,9 +44,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	printf("Opening dict '%s'\n", paths.paths[d_idx]->name);
+	printf("Opening dict '%s'\n", paths.paths[d_idx]->fname);
 
-	dict = sd_open_dict(paths.paths[d_idx]->dir, paths.paths[d_idx]->name);
+	dict = sd_open_dict(paths.paths[d_idx]->dir, paths.paths[d_idx]->fname);
 	if (!dict) {
 		printf("Failed to load dict!\n");
 		return 1;
