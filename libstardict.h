@@ -19,6 +19,8 @@ enum sd_entry_fmt {
 	SD_ENTRY_PANGO_MARKUP = 'g',
 	/* HTML markup */
 	SD_ENTRY_HTML = 'h',
+	/* http://xdxf.sourceforge.net */
+	SD_ENTRY_XDXF = 'x',
 	/* Chinese YinBiao or Japanese Kana utf8 string */
 	SD_ENTRY_CHINESE_JAPANESE = 'y',
 };
