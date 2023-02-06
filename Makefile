@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 -include config.mk
 CFLAGS?=-W -Wall -O2
+CFLAGS+=-std=gnu99
 PREFIX?=/usr/local/
 LIBDIR?=$(PREFIX)/lib
 BINDIR?=$(PREFIX)/bin
