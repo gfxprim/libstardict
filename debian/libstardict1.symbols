@@ -1,0 +1,9 @@
+libstardict.so.1 libstardict1 #MINVER#
+ sd_close_dict@Base 1.0.0-1
+ sd_free_dict_paths@Base 1.0.0-1
+ sd_free_entry@Base 1.0.0-1
+ sd_get_entry@Base 1.0.0-1
+ sd_idx_to_word@Base 1.0.0-1
+ sd_lookup_dict@Base 1.0.0-1
+ sd_lookup_dict_paths@Base 1.0.0-1
+ sd_open_dict@Base 1.0.0-1

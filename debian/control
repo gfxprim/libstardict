@@ -1,0 +1,33 @@
+Source: libstardict
+Priority: extra
+Maintainer: Cyril Hrubis <metan@ucw.cz>
+Build-Depends: debhelper (>= 9.0), zlib1g-dev
+Standards-Version: 4.0.0
+Section: libs
+Homepage: http://gfxprim.ucw.cz/
+
+Package: libstardict-dev
+Section: libdevel
+Architecture: any
+Depends: libstardict1 (= ${binary:Version})
+Description: A stardict dictionary parser library
+ Minimalistic library to load and lookup a stardict compatible dictionaries
+ .
+ This package contains the header and development files which are
+ needed for building stardict applications.
+
+Package: libstardict1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A stardict dictionary parser library
+ Minimalistic library to load and lookup a stardict compatible dictionaries
+ .
+ This package contains the shared libraries.
+
+Package: sd-cmd
+Section: misc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libstardict1 (= ${binary:Version})
+Description: Stardict dictionary lookup command
+ Simple tool to lookup in stardict dictionaries.
