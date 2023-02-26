@@ -61,6 +61,7 @@ DESTDIR="$RPM_BUILD_ROOT" make install
 %{_libdir}/libstardict.so
 %{_libdir}/libstardict.a
 %{_includedir}/*.h
+%{_mandir}/man3/*
 
 %files -n sd-cmd
 %defattr(-,root,root)
