@@ -82,9 +82,10 @@ struct sd_lookup_res {
  * @prefix An utf8 string prefix to look for.
  * @res A range to store the result into.
  *
- * @return Returns zero if prefix wasn't found, non-zero otherwise.
+ * @return Returns a number of entries in the result range, when zero is
+ *         returned the range is res is not valid.
  */
-int sd_lookup_dict(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res);
+unsigned int sd_lookup_dict(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res);
 
 /**
  * @brief Returns a number of entries in look result range.
@@ -121,6 +122,14 @@ struct sd_entry {
 struct sd_entry *sd_get_entry(struct sd_dict *dict, unsigned int idx);
 
 /**
+ * @brief If possible strip text formatting from entry data.
+ *
+ * @entry An entry returned from sd_get_entry()
+ * @return Returns non-zero if entry was in or was converted to UTF8 plaintext.
+ */
+int sd_strip_entry(struct sd_entry *entry);
+
+/**
  * @brief Frees an entry.
  *
  * @entry An entry returned from sd_get_entry()
@@ -128,7 +137,6 @@ struct sd_entry *sd_get_entry(struct sd_dict *dict, unsigned int idx);
 void sd_free_entry(struct sd_entry *entry);
 
 struct sd_dict_path {
-	struct sd_dict_path *next;
 	const char *dir;
 	char book_name[SD_DICT_BOOKNAME_MAX];
 	char fname[];

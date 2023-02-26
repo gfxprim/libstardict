@@ -582,7 +582,7 @@ static unsigned int binary_lookup(struct sd_dict *self, const char *prefix, int 
 	}
 }
 
-int sd_lookup_dict(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res)
+unsigned int sd_lookup_dict(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res)
 {
 	res->min = binary_lookup(self, prefix, 1);
 
@@ -591,7 +591,7 @@ int sd_lookup_dict(struct sd_dict *self, const char *prefix, struct sd_lookup_re
 
 	res->max = binary_lookup(self, prefix, 0);
 
-	return 1;
+	return sd_lookup_res_cnt(res);
 }
 
 const char *sd_idx_to_word(struct sd_dict *self, unsigned int idx)
@@ -628,6 +628,69 @@ struct sd_entry *sd_get_entry(struct sd_dict *self, unsigned int idx)
 	res->data[data_size] = 0;
 
 	return res;
+}
+
+static void strip_tags(struct sd_entry *entry)
+{
+	char *i, *c;
+	int copy = 1;
+	int br = 0;
+
+	for (c = i = entry->data; *i; i++) {
+		/* Newlines in HTML */
+		if (!copy) {
+			switch (br) {
+			case 1:
+				if (*i == 'b' || *i == 'B')
+					br++;
+				else
+					br = 0;
+			break;
+			case 2:
+				if (*i == 'r' || *i == 'R')
+					br++;
+				else
+					br = 0;
+			break;
+			case 3:
+				if (*i == ' ' || *i == '>')
+					*(c++) = '\n';
+				br = 0;
+			break;
+			}
+		}
+
+		if (*i == '<') {
+			copy = 0;
+			br = 1;
+			continue;
+		}
+
+		if (*i == '>') {
+			copy = 1;
+			continue;
+		}
+
+		if (copy)
+			*(c++) = *i;
+	}
+
+	*c = 0;
+}
+
+int sd_strip_entry(struct sd_entry *entry)
+{
+	switch (entry->fmt) {
+	case SD_ENTRY_UTF8_TEXT:
+		return 1;
+	case SD_ENTRY_PANGO_MARKUP:
+	case SD_ENTRY_HTML:
+        case SD_ENTRY_XDXF:
+		strip_tags(entry);
+		return 1;
+	}
+
+	return 0;
 }
 
 void sd_free_entry(struct sd_entry *entry)

@@ -14,13 +14,16 @@ int main(int argc, char *argv[])
 {
 	struct sd_dict_paths paths;
 	struct sd_dict *dict;
-	unsigned int i, d_idx = 0;
+	unsigned int i, d_idx = 0, raw_entry = 0;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "d:")) != -1) {
+	while ((opt = getopt(argc, argv, "d:r")) != -1) {
 		switch (opt) {
 		case 'd':
 			d_idx = atoi(optarg);
+		break;
+		case 'r':
+			raw_entry = 1;
 		break;
 		default:
 			printf("Invalid option %c\n", opt);
@@ -81,8 +84,11 @@ int main(int argc, char *argv[])
 		printf("%s\n", sd_idx_to_word(dict, i));
 
 	struct sd_entry *entry = sd_get_entry(dict, res.min);
-	if (entry)
+	if (entry) {
+		if (!raw_entry)
+			sd_strip_entry(entry);
 		printf("%s\n", entry->data);
+	}
 
 	sd_free_entry(entry);
 	sd_close_dict(dict);
