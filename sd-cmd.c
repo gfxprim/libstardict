@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	printf("Lookup '%s' ... ", argv[optind]);
 
-	int ret = sd_lookup_dict(dict, argv[optind], &res);
+	int ret = sd_lookup(dict, argv[optind], &res);
 
 	if (!ret) {
 		printf("none\n");

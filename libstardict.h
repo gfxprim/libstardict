@@ -85,7 +85,7 @@ struct sd_lookup_res {
  * @return Returns a number of entries in the result range, when zero is
  *         returned the range is res is not valid.
  */
-unsigned int sd_lookup_dict(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res);
+unsigned int sd_lookup(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res);
 
 /**
  * @brief Returns a number of entries in look result range.

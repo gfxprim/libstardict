@@ -582,7 +582,7 @@ static unsigned int binary_lookup(struct sd_dict *self, const char *prefix, int 
 	}
 }
 
-unsigned int sd_lookup_dict(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res)
+unsigned int sd_lookup(struct sd_dict *self, const char *prefix, struct sd_lookup_res *res)
 {
 	res->min = binary_lookup(self, prefix, 1);
 
