@@ -59,6 +59,7 @@ install:
 	install $(LIB_HEADERS) -t $(DESTDIR)/$(INCLUDEDIR)
 	[ -z "$(BIN)" ] || install -d $(DESTDIR)/$(BINDIR)
 	[ -z "$(BIN)" ] || install $(BIN) -t $(DESTDIR)/$(BINDIR)
+	cd man && $(MAKE) install
 
 clean:
 	rm -f $(LIB_NAME) $(LIB_SONAME) $(LIB_FILE) $(LIB_SNAME) $(LIB_OBJS) $(BIN) $(BIN_OBJS) $(LIB_DEPS) $(BIN_DEPS) config.mk
