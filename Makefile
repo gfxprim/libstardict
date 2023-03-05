@@ -9,6 +9,8 @@ INCLUDEDIR?=$(PREFIX)/include
 
 include proj.mk
 
+BIN_INSTALL?=1
+
 LIB_OBJS=$(subst .c,.o,$(LIB_SRCS))
 LIB_DEPS=$(subst .c,.dep,$(LIB_SRCS))
 LIB_SNAME=lib$(LIB).a
@@ -53,12 +55,17 @@ $(BIN_DEPS) $(LIB_DEPS): %.dep: %.c
 
 install:
 	install -d $(DESTDIR)/$(LIBDIR)
-	install $(LIB_FILE) $(LIB_SNAME) -t $(DESTDIR)/$(LIBDIR)
+	install $(LIB_FILE) -t $(DESTDIR)/$(LIBDIR)
+	install -m 644 $(LIB_SNAME) -t $(DESTDIR)/$(LIBDIR)
 	cp -d $(LIB_NAME) $(LIB_SONAME) $(DESTDIR)/$(LIBDIR)
 	install -d $(DESTDIR)/$(INCLUDEDIR)
-	install $(LIB_HEADERS) -t $(DESTDIR)/$(INCLUDEDIR)
-	[ -z "$(BIN)" ] || install -d $(DESTDIR)/$(BINDIR)
-	[ -z "$(BIN)" ] || install $(BIN) -t $(DESTDIR)/$(BINDIR)
+	install -m 644 $(LIB_HEADERS) -t $(DESTDIR)/$(INCLUDEDIR)
+ifeq ($(BIN_INSTALL),1)
+ifdef BIN
+	install -d $(DESTDIR)/$(BINDIR)
+	install $(BIN) -t $(DESTDIR)/$(BINDIR)
+endif
+endif
 	cd man && $(MAKE) install
 
 clean:
