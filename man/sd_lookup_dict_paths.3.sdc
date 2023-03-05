@@ -20,7 +20,7 @@ Libstardict (_-lstardict_)
 	stardict system path e.g. _/usr/share/stardict/dic/_ and in the
 	user home in _.stardict/dic/_ directory.
 
-	A staridct dictionary consists of a few files with the same name and
+	A stardict dictionary consists of a few files with the same name and
 	different suffixes, from these the .ifo file is parsed during the
 	lookup and if this operation succeeds the dictionary is added to the
 	_paths_ array of dictionaries.
